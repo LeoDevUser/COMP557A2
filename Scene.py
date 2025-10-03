@@ -117,14 +117,12 @@ class Scene:
         ''' return the light position in world coordinates. 
         Recall that the light is at the origin in the light view as defined by the light_view_camera. '''
 
-        # TODO OBJECTIVE: compute the appropriate return value for this funciton!
+        #DONE: compute the appropriate return value for this funciton!
         #Since the camera is always at the origin (0,0,0,1) in camera space and that
         #the view matrix transforms from world space to camera space we apply the inverse
         #to the point to get position in world coordinates
 
         return glm.inverse(self.light_view_camera.V) * glm.vec4(0,0,0,1)
-
-        #return  glm.vec4(10,10,10, 1)
 
     def get_light_pos_in_view( self, V: glm.mat4 ) -> glm.vec3:
         ''' Given viewing matrix V, return the light position in that view. '''        
@@ -141,11 +139,20 @@ class Scene:
         ''' Given a viewing matrix V, compute near and far values that just fit the scene vertices. 
         Recall that near and far are the positive distances along the -Z axis of the view. '''
 
-        # TODO: OBJECTIVE: compute n and f for the scene verts and return these values!
+        verts = self.get_all_scene_verts()
+        vectors = []
 
-        n = 1   # TODO: replace this arbitrary value!
-        f = 30  # TODO: replace this arbitrary value!
+        #vertices coords
+        for i in range(len(verts[0])):
+            vectors += [glm.vec4(verts[0][i],verts[1][i],verts[2][i],verts[3][i])]
+
+        transformed_verts = [V * v for v in vectors] #transform vertices to camera space
+        z_values  = [v.z for v in transformed_verts]
+        n = -1 * np.max(z_values)
+        f = -1 * np.min(z_values)
         return n, f
+
+
 
     def compute_lrbt_for_projection(self, V: glm.mat4, n: float, f: float):
         ''' Given a viewing matrix V, and near and far values, compute l,r,b,t values that just fit the scene vertices. '''
