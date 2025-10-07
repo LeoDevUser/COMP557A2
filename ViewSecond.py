@@ -37,6 +37,7 @@ class ViewSecond():
         self.scene.axis.render()
 
         if self.scene.controls.show_light_camera:	
+            #we want M and we have mvp so m = mvp * v^-1 * p*^-1
 
             M = glm.inverse(self.scene.light_view_camera.V) * glm.inverse(self.scene.light_view_camera.P)
             M = cam_mvp * M

@@ -3,46 +3,78 @@ from pyglm import glm
 from Scene import Scene, Camera
 
 class ViewMain():
-	def __init__(self, scene: Scene, camera: Camera, ctx: mgl.Context):
-		self.scene = scene
-		self.camera = camera
-		self.ctx = ctx
+    def __init__(self, scene: Scene, camera: Camera, ctx: mgl.Context):
+        self.scene = scene
+        self.camera = camera
+        self.ctx = ctx
 
-	def paintGL(self, aspect_ratio: float):
-		self.ctx.clear(0,0,0)
-		self.ctx.enable(mgl.DEPTH_TEST)
-		
-		# set up projection and view matrix for the main camera vew
-		fov = glm.radians(self.scene.controls.main_view_fov)
-		self.camera.V = glm.translate(glm.mat4(1), glm.vec3(0, 0, -self.camera.distance)) * self.camera.R
-		n,f = self.scene.compute_nf_from_view(self.camera.V)		
-		self.camera.P = glm.perspective(fov, aspect_ratio, n, f)
+    def paintGL(self, aspect_ratio: float):
+        self.ctx.clear(0,0,0)
+        self.ctx.enable(mgl.DEPTH_TEST)
 
-		cam_mvp = self.camera.P * self.camera.V 
-		cam_mv = self.camera.V 
+        # set up projection and view matrix for the main camera vew
+        fov = glm.radians(self.scene.controls.main_view_fov)
+        self.camera.V = glm.translate(glm.mat4(1), glm.vec3(0, 0, -self.camera.distance)) * self.camera.R
+        n,f = self.scene.compute_nf_from_view(self.camera.V)		
+        self.camera.P = glm.perspective(fov, aspect_ratio, n, f)
 
-		self.scene.prog_shadow_map['u_mv'].write(cam_mv)
-		self.scene.prog_shadow_map['u_mvp'].write(cam_mvp)
-		light_pos = self.scene.get_light_pos_in_view( self.camera.V )		 
-		self.scene.prog_shadow_map['u_light_pos'].write(light_pos)
-		self.scene.prog_shadow_map['u_use_lighting'] = True		
-		self.scene.render_for_view()
+        cam_mvp = self.camera.P * self.camera.V 
+        cam_mv = self.camera.V 
 
-		if self.scene.controls.cheap_shadows:
-			# TODO: OBJECTIVE: Implement cheap shadows
-			# NOTE: This will be easiest to do following the explanation from class, using a composition of transformations
+        self.scene.prog_shadow_map['u_mv'].write(cam_mv)
+        self.scene.prog_shadow_map['u_mvp'].write(cam_mvp)
+        light_pos = self.scene.get_light_pos_in_view( self.camera.V )		 
+        self.scene.prog_shadow_map['u_light_pos'].write(light_pos)
+        self.scene.prog_shadow_map['u_use_lighting'] = True		
+        self.scene.render_for_view()
 
-			ground_plane_in_world_coords = self.scene.get_ground_plane()
-			light_pos_in_world_coords = self.scene.get_light_pos_in_world()
+        if self.scene.controls.cheap_shadows:
+            ground_plane_in_world_coords = self.scene.get_ground_plane()
+            light_pos_in_world_coords = self.scene.get_light_pos_in_world()
 
-			cheap_shadow_modelling_transformation = glm.mat4( 1 ) # TODO: compute the appropriate matrix  
+            L = light_pos_in_world_coords.xyz
+            n = glm.normalize(ground_plane_in_world_coords.xyz)
+            w = n
 
-			cam_mvp = self.camera.P * self.camera.V * cheap_shadow_modelling_transformation
-			self.scene.prog_shadow_map['u_mvp'].write(cam_mvp)
-			self.scene.prog_shadow_map['u_use_lighting'] = False
-			self.scene.prog_shadow_map['u_use_shadow_map'] = False
-			self.scene.render_cheap_shadows()
-			self.scene.prog_shadow_map['u_use_lighting'] = True
-			self.scene.prog_shadow_map['u_use_shadow_map'] = self.scene.controls.use_shadow_map
+            # Construct arbitrary orthogonal u and v frame axes
+            if abs(w.y) < 0.9:
+                u = glm.normalize(glm.cross(glm.vec3(0, 1, 0), w))
+            else:
+                u = glm.normalize(glm.cross(glm.vec3(1, 0, 0), w))
+            v = glm.cross(w, u)
 
-	  
+            #build V matrix - transforms from light's coordinate system to world
+            V = glm.mat4(
+                glm.vec4(u, 0),
+                glm.vec4(v, 0),
+                glm.vec4(w, 0),
+                glm.vec4(L, 1)
+            )
+
+            #after transforming by V^-1, the plane will be at distance d along the w-axis
+            #since w = n and the light is at L, the distance is |n·L + plane_d|
+            d = abs(glm.dot(n, L) + ground_plane_in_world_coords.w)
+
+            # Perspective projection matrix for projecting onto the plane at z=d
+            # After this transform and homogeneous division, points will have z=d
+            # Note: GLM uses column-major ordering
+            P = glm.mat4(
+                d, 0, 0, 0,
+                0, d, 0, 0,
+                0, 0, d, -1,
+                0, 0, 0, 0
+            )
+
+            offset = glm.mat4()
+            offset[3][2] = 0.001
+
+            P = offset * P
+            cheap_shadow_modelling_transformation = V * P * glm.inverse(V)
+
+            cam_mvp = self.camera.P * self.camera.V * cheap_shadow_modelling_transformation
+            self.scene.prog_shadow_map['u_mvp'].write(cam_mvp)
+            self.scene.prog_shadow_map['u_use_lighting'] = False
+            self.scene.prog_shadow_map['u_use_shadow_map'] = False
+            self.scene.render_cheap_shadows()
+            self.scene.prog_shadow_map['u_use_lighting'] = True
+            self.scene.prog_shadow_map['u_use_shadow_map'] = self.scene.controls.use_shadow_map
