@@ -51,13 +51,9 @@ class ViewMain():
                 glm.vec4(L, 1)
             )
 
-            #after transforming by V^-1, the plane will be at distance d along the w-axis
-            #since w = n and the light is at L, the distance is |n·L + plane_d|
-            d = abs(glm.dot(n, L) + ground_plane_in_world_coords.w)
+            point = ground_plane_in_world_coords.w * n
+            d = glm.dot(n, (L-point))
 
-            # Perspective projection matrix for projecting onto the plane at z=d
-            # After this transform and homogeneous division, points will have z=d
-            # Note: GLM uses column-major ordering
             P = glm.mat4(
                 d, 0, 0, 0,
                 0, d, 0, 0,
