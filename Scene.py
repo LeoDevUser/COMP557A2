@@ -157,7 +157,6 @@ class Scene:
     def compute_lrbt_for_projection(self, V: glm.mat4, n: float, f: float):
         ''' Given a viewing matrix V, and near and far values, compute l,r,b,t values that just fit the scene vertices. '''
 
-        # TODO: OBJECTIVE: compute l,r,b,t for the scene vertices, given the near and far values, and return these values!
         verts = self.get_all_scene_verts()
         vectors = []
 
@@ -186,9 +185,6 @@ class Scene:
             self.ctx.enable(mgl.CULL_FACE)
             self.ctx.cull_face = 'front'   # reduce self-shadowing
 
-        # TODO: OBJECTIVE: set up the appropraite matrix for drawing the shadow map view
-
-        #mvp = glm.mat4(1) # TODO: compute the appropriate matrix to use for rendering the shadow map for the light camera
         mvp = self.light_view_camera.P * self.light_view_camera.V
         self.prog_depth['u_mvp'].write( mvp )    
         self.render_for_shadow_map()
@@ -197,10 +193,6 @@ class Scene:
         self.ctx.screen.use() 
         self.ctx.cull_face = 'back'
         self.ctx.disable(mgl.CULL_FACE)
-
-        # TODO: OBJECTIVE: set the light space transform that takes vertices in world coordinates to texture coordinates in the shadow map
-
-        #light_space_transform = glm.mat4(1) # TODO: compute the appropraite matrix!
         W = glm.mat4(
                 0.5, 0, 0, 0,
                 0, 0.5, 0, 0,

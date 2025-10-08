@@ -36,11 +36,7 @@ class ViewMain():
             n = glm.normalize(ground_plane_in_world_coords.xyz)
             w = n
 
-            # Construct arbitrary orthogonal u and v frame axes
-            if abs(w.y) < 0.9:
-                u = glm.normalize(glm.cross(glm.vec3(0, 1, 0), w))
-            else:
-                u = glm.normalize(glm.cross(glm.vec3(1, 0, 0), w))
+            u = glm.normalize(glm.cross(glm.vec3(0, 1, 0), w))
             v = glm.cross(w, u)
 
             #build V matrix - transforms from light's coordinate system to world
