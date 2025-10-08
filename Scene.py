@@ -148,8 +148,8 @@ class Scene:
 
         transformed_verts = [V * v for v in vectors] #transform vertices to camera space
         z_values  = [v.z for v in transformed_verts]
-        n = -1 * np.max(z_values)
         f = -1 * np.min(z_values)
+        n = -1 * np.max(z_values)
         return n, f
 
 
@@ -158,11 +158,24 @@ class Scene:
         ''' Given a viewing matrix V, and near and far values, compute l,r,b,t values that just fit the scene vertices. '''
 
         # TODO: OBJECTIVE: compute l,r,b,t for the scene vertices, given the near and far values, and return these values!
+        verts = self.get_all_scene_verts()
+        vectors = []
+
+        #vertices coords
+        for i in range(len(verts[0])):
+            vectors += [glm.vec4(verts[0][i],verts[1][i],verts[2][i],verts[3][i])]
+
+        transformed_verts = [V * v for v in vectors] #transform vertices to camera space
+
+        #project onto the near plane
+        x_projected = [v.x * n / -v.z for v in transformed_verts]
+        y_projected = [v.y * n / -v.z for v in transformed_verts]
         
-        l = -10  # TODO: replace this arbitrary value!
-        r =  10  # TODO: replace this arbitrary value!
-        b = -10  # TODO: replace this arbitrary value!
-        t =  10  # TODO: replace this arbitrary value!
+        l = np.min(x_projected)
+        r = np.max(x_projected)
+        b = np.min(y_projected)
+        t = np.max(y_projected)
+
         return l, r, b, t
 
     def render_shadow_pass(self):
