@@ -175,7 +175,8 @@ class Scene:
 
         # TODO: OBJECTIVE: set up the appropraite matrix for drawing the shadow map view
 
-        mvp = glm.mat4(1) # TODO: compute the appropriate matrix to use for rendering the shadow map for the light camera
+        #mvp = glm.mat4(1) # TODO: compute the appropriate matrix to use for rendering the shadow map for the light camera
+        mvp = self.light_view_camera.P * self.light_view_camera.V
         self.prog_depth['u_mvp'].write( mvp )    
         self.render_for_shadow_map()
 
@@ -186,7 +187,17 @@ class Scene:
 
         # TODO: OBJECTIVE: set the light space transform that takes vertices in world coordinates to texture coordinates in the shadow map
 
-        light_space_transform = glm.mat4(1) # TODO: compute the appropraite matrix!
+        #light_space_transform = glm.mat4(1) # TODO: compute the appropraite matrix!
+        W = glm.mat4(
+                0.5, 0, 0, 0,
+                0, 0.5, 0, 0,
+                0, 0, 0.5, 0,
+                0.5, 0.5, 0.5, 1
+                )
+
+
+        light_space_transform = W * self.light_view_camera.P * self.light_view_camera.V
+
         self.prog_shadow_map['u_light_space_transform'].write(light_space_transform)
 
 
