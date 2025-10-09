@@ -1,3 +1,4 @@
+#Leonardo Martinez 261082940
 import numpy as np
 import trimesh
 import moderngl as mgl

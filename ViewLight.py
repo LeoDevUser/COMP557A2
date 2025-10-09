@@ -1,3 +1,4 @@
+#Leonardo Martinez 261082940
 import moderngl as mgl
 from pyglm import glm
 from Scene import Scene, Camera

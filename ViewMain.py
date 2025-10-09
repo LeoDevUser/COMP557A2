@@ -1,3 +1,4 @@
+#Leonardo Martinez 261082940
 import moderngl as mgl
 from pyglm import glm
 from Scene import Scene, Camera
@@ -36,7 +37,12 @@ class ViewMain():
             n = glm.normalize(ground_plane_in_world_coords.xyz)
             w = n
 
-            u = glm.normalize(glm.cross(glm.vec3(0, 1, 0), w))
+            #handle case where plane normal is nearly parallel to y-axis
+            if abs(w.y) < 0.9:
+                u = glm.normalize(glm.cross(glm.vec3(0, 1, 0), w))
+            else: #normal nearly vertical, must use different vector
+                u = glm.normalize(glm.cross(glm.vec3(1, 0, 0), w))
+
             v = glm.cross(w, u)
 
             #build V matrix - transforms from light's coordinate system to world

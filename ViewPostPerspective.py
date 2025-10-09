@@ -1,3 +1,22 @@
+#Leonardo Martinez 261082940
+#Can you draw the main camera view axis too?
+
+#M = mvp * glm.inverse(self.scene.main_view_camera.V)
+#self.scene.prog_shadow_map['u_mvp'].write(M)
+#self.scene.render_axis()
+
+#The code above does not draw the main camera axis like it would
+#for the other cameras show_main_camera since:
+
+#mvp = P_post * V_post * reflect_Z * P_main * V_main, so
+#M = mvp * glm.inverse(self.scene.main_view_camera.V)
+#M = P_post * V_post * reflect_Z * P_main * V_main * V^-1
+#M = P_post * V_post * reflect_Z * P_main
+#Which means that we are trying to project the origin (0,0,0,1)
+#P_main * (0,0,0,1)^T = (0,0,(-2nf)/(fn),0)^T
+#So our scaling factor w becomes 0 so we cant do the perspective
+#divide since division by 0 is undefined which is why we cant draw
+#the main camera view axis
 import moderngl as mgl
 from pyglm import glm
 from Scene import Scene, Camera
@@ -56,24 +75,5 @@ class ViewPostPerspective():
             self.scene.prog_shadow_map['u_mvp'].write(M)
             self.scene.prog_shadow_map['u_color'] = (1, 1, 1, 0.75)  # make main frustum white
             self.scene.render_cube()  # Frustum of main camera
-
-            #Can you draw the main camera view axis too?
-
-            #M = mvp * glm.inverse(self.scene.main_view_camera.V)
-            #self.scene.prog_shadow_map['u_mvp'].write(M)
-            #self.scene.render_axis()
-
-            #The code above does not draw the main camera axis like it would
-            #for the other cameras show_main_camera since:
-            
-            #mvp = P_post * V_post * reflect_Z * P_main * V_main, so
-            #M = mvp * glm.inverse(self.scene.main_view_camera.V)
-            #M = P_post * V_post * reflect_Z * P_main * V_main * V^-1
-            #M = P_post * V_post * reflect_Z * P_main
-            #Which means that we are trying to project the origin (0,0,0,1)
-            #P_main * (0,0,0,1)^T = (0,0,(-2nf)/(fn),0)^T
-            #So our scaling factor w becomes 0 so we cant do the perspective
-            #divide since division by 0 is undefined which is why we cant draw
-            #the main camera view axis
 
         self.ctx.disable(mgl.BLEND)

@@ -1,3 +1,4 @@
+#Leonardo Martinez 261082940
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QApplication, QLabel
 from ViewSceneControlWidget import QGLViewSceneControlWidget
@@ -6,7 +7,7 @@ class ShadowMappingApplication(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Shadow Mapping Assignment 2 - COMP 557 F2025")
+        self.setWindowTitle("Shadow Mapping Assignment 2 - COMP 557 F2025 Leonardo Martinez 261082940")
         
         main_layout = QHBoxLayout()
 
